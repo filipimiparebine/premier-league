@@ -21,4 +21,10 @@ class LeagueController extends Controller
         $teams = $this->teamRepository->all();
         return response()->json($teams);
     }
+
+    public function getSeasons(): JsonResponse
+    {
+        $teams = $this->seasonRepository->all();
+        return response()->json($teams);
+    }
 }
