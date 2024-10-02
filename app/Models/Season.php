@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Season extends Model
@@ -12,23 +11,16 @@ class Season extends Model
     use HasFactory;
 
     protected $fillable = [
-        'year_period',
-        'team_id',
-        'points',
-        'played_matches',
-        'won',
-        'drawn',
-        'lost',
-        'goal_difference'
+        'name',
     ];
 
-    public function team(): BelongsTo
-    {
-        return $this->belongsTo(Team::class);
-    }
+    protected $hidden = [
+        'created_at',
+        'updated_at'
+    ];
 
-    public function weeks(): HasMany
+    public function leaderboard(): HasMany
     {
-        return $this->hasMany(Week::class);
+        return $this->hasMany(SeasonLeaderboard::class);
     }
 }

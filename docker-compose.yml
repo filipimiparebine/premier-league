@@ -1,0 +1,47 @@
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+    container_name: premier-league-be
+    restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./:/var/www
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - premier-league-network
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  db:
+    image: mysql:8.0
+    container_name: premier-league-db
+    hostname: premier-league-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    ports:
+      - '3306:3306'
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - premier-league-network
+
+networks:
+  premier-league-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local

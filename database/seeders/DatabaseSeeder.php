@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Database\Seeders\TeamSeeder;
+use Database\Seeders\SeasonSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -10,6 +12,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             TeamSeeder::class,
+            SeasonSeeder::class,
         ]);
     }
 }
