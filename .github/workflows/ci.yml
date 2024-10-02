@@ -1,0 +1,46 @@
+name: CI
+
+on: push
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: premier-league-db
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: 1234
+          MYSQL_ROOT_PASSWORD: 1234
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, pdo_mysql
+
+      - name: Install Dependencies
+        run: composer install --no-scripts --no-progress --prefer-dist --optimize-autoloader --quiet
+
+      - name: Run Tests with PHPUnit
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: premier-league-db
+          DB_USERNAME: mysql
+          DB_PASSWORD: 1234
+          APP_KEY: ${{ secrets.APP_KEY }}
+        run: vendor/bin/phpunit
