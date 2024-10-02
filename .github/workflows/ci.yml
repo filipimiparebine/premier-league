@@ -42,4 +42,5 @@ jobs:
           DB_DATABASE: premier-league-db
           DB_USERNAME: mysql
           DB_PASSWORD: 1234
+          APP_KEY: ${{ secrets.APP_KEY }}
         run: vendor/bin/phpunit
