@@ -55,7 +55,7 @@ class RoutesTest extends TestCase
     {
         $teams = Team::pluck('id')->take(10)->toArray();
         $season = Season::first();
-        $res = $this->postJson('api/start-season', [
+        $this->postJson('api/start-season', [
             'team_ids' => $teams,
             'season_id' => $season->id
         ]);
@@ -63,5 +63,19 @@ class RoutesTest extends TestCase
 
         $response = json_decode($res->getContent());
         $this->assertEquals(10, count($response->leaderboard));
+    }
+
+    public function testWeekFixtures()
+    {
+        $teams = Team::pluck('id')->take(10)->toArray();
+        $season = Season::first();
+        $this->postJson('api/start-season', [
+            'team_ids' => $teams,
+            'season_id' => $season->id
+        ]);
+        $res = $this->get("api/fixtures/{$season->id}/1");
+
+        $response = json_decode($res->getContent());
+        $this->assertEquals(5, count($response));
     }
 }
