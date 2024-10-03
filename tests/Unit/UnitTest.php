@@ -3,11 +3,11 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use App\Interfaces\TeamRepositoryInterface;
 use Database\Seeders\TeamSeeder;
+use App\Interfaces\TeamRepositoryInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class PremierLeagueTest extends TestCase
+class UnitTest extends TestCase
 {
     use RefreshDatabase;
 
