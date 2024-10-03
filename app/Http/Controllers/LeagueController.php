@@ -52,4 +52,11 @@ class LeagueController extends Controller
 
         return response()->json($leagueTable);
     }
+
+    public function getWeekFixtures(int $seasonId, int $weekNumber): JsonResponse
+    {
+        $fixtures = $this->weekRepository->getWeek($seasonId, $weekNumber);
+
+        return response()->json($fixtures);
+    }
 }

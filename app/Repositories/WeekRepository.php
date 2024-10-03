@@ -40,4 +40,11 @@ class WeekRepository implements WeekRepositoryInterface
         }
         return $week->delete();
     }
+
+    public function getWeek(int $seasonId, int $weekNumber): Collection
+    {
+        return Week::whereSeasonId($seasonId)
+            ->whereWeekNumber($weekNumber)
+            ->get();
+    }
 }

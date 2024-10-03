@@ -12,4 +12,5 @@ interface WeekRepositoryInterface
     public function create(array $data): Week;
     public function update(int $id, array $data): bool;
     public function delete(int $id): bool;
+    public function getWeek(int $seasonId, int $weekNumber): Collection;
 }
