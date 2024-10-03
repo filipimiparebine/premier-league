@@ -10,6 +10,10 @@ class Season extends Model
 {
     use HasFactory;
 
+    protected $with = [
+        'leaderboard'
+    ];
+
     protected $fillable = [
         'name',
     ];
@@ -21,6 +25,6 @@ class Season extends Model
 
     public function leaderboard(): HasMany
     {
-        return $this->hasMany(SeasonLeaderboard::class);
+        return $this->hasMany(SeasonLeaderboard::class)->orderByDesc('points');
     }
 }

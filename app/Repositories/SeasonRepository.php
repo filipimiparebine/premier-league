@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Season;
 use App\Interfaces\SeasonRepositoryInterface;
+use App\Models\SeasonLeaderboard;
 use Illuminate\Database\Eloquent\Collection;
 
 class SeasonRepository implements SeasonRepositoryInterface
@@ -39,5 +40,34 @@ class SeasonRepository implements SeasonRepositoryInterface
             return false;
         }
         return $season->delete();
+    }
+
+    public function updateTeamStats(int $seasonId, int $teamId, array $stats): bool
+    {
+        $season = SeasonLeaderboard::where('season_id', $seasonId)
+            ->where('team_id', $teamId)
+            ->first();
+
+        if (!$season) {
+            return false;
+        }
+
+        return $season->update($stats);
+    }
+
+    public function fillLeagueTable(array $teamIds, int $seasonId): void
+    {
+        foreach ($teamIds as $teamId) {
+            SeasonLeaderboard::create([
+                'season_id' => $seasonId,
+                'team_id' => $teamId,
+                'points' => 0,
+                'played_matches' => 0,
+                'won' => 0,
+                'drawn' => 0,
+                'lost' => 0,
+                'goal_difference' => 0,
+            ]);
+        }
     }
 }

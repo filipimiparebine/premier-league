@@ -12,4 +12,6 @@ interface SeasonRepositoryInterface
     public function create(array $data): Season;
     public function update(int $id, array $data): bool;
     public function delete(int $id): bool;
+    public function updateTeamStats(int $seasonId, int $teamId, array $stats): bool;
+    public function fillLeagueTable(array $teamIds, int $seasonId): void;
 }
