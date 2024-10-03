@@ -9,3 +9,4 @@ Route::get('/seasons/{id}', [LeagueController::class, 'getSeason']);
 Route::post('/start-season', [LeagueController::class, 'startSeason']);
 Route::get('/league-table/{seasonId}', [LeagueController::class, 'getLeagueTable']);
 Route::get('/fixtures/{seasonId}/{weekNumber}', [LeagueController::class, 'getWeekFixtures']);
+Route::get('/simulate-week/{seasonId}/{weekNumber}', [LeagueController::class, 'simulateWeek']);

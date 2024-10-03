@@ -47,4 +47,16 @@ class WeekRepository implements WeekRepositoryInterface
             ->whereWeekNumber($weekNumber)
             ->get();
     }
+
+    public function updateMatchResult(int $weekId, int $homeScore, int $awayScore): bool
+    {
+        $week = $this->find($weekId);
+        if (!$week) {
+            return false;
+        }
+        return $week->update([
+            'home_score' => $homeScore,
+            'away_score' => $awayScore,
+        ]);
+    }
 }

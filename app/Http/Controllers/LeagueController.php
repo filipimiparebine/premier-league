@@ -59,4 +59,11 @@ class LeagueController extends Controller
 
         return response()->json($fixtures);
     }
+
+    public function simulateWeek(int $seasonId, int $weekNumber): JsonResponse
+    {
+        $this->leagueSimulationService->simulateWeek($seasonId, $weekNumber);
+
+        return response()->json(['message' => 'Week simulated successfully']);
+    }
 }

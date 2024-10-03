@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
-use App\Interfaces\TeamRepositoryInterface;
-use App\Interfaces\SeasonRepositoryInterface;
-use App\Interfaces\WeekRepositoryInterface;
+use App\Models\Week;
 use Illuminate\Support\Collection;
+use App\Interfaces\TeamRepositoryInterface;
+use App\Interfaces\WeekRepositoryInterface;
+use App\Interfaces\SeasonRepositoryInterface;
+use App\Models\SeasonLeaderboard;
 
 class LeagueSimulationService
 {
@@ -77,5 +79,50 @@ class LeagueSimulationService
         }
 
         return $fixtures;
+    }
+
+    public function simulateWeek(int $seasonId, int $weekNumber): void
+    {
+        $weekMatches = $this->weekRepository->getWeek($seasonId, $weekNumber);
+
+        foreach ($weekMatches as $weekMatch) {
+            $homeScore = rand(0, 5);
+            $awayScore = rand(0, 5);
+
+            $this->weekRepository->updateMatchResult($weekMatch->id, $homeScore, $awayScore);
+            $this->updateTeamStats($seasonId, $weekMatch, $homeScore, $awayScore);
+        }
+    }
+
+    private function updateTeamStats(int $seasonId, Week $week, int $homeScore, int $awayScore): void
+    {
+        $homeStats = $this->calculateStats($seasonId, $week->home_team_id, $homeScore, $awayScore);
+        $awayStats = $this->calculateStats($seasonId, $week->away_team_id, $awayScore, $homeScore);
+
+        $this->seasonRepository->updateTeamStats($seasonId, $week->home_team_id, $homeStats);
+        $this->seasonRepository->updateTeamStats($seasonId, $week->away_team_id, $awayStats);
+    }
+
+    private function calculateStats(int $seasonId, int $teamId, int $teamScore, int $opponentScore): array
+    {
+        $currentStats = SeasonLeaderboard::whereSeasonId($seasonId)
+            ->whereTeamId($teamId)
+            ->first();
+        $stats = [
+            'played_matches' => $currentStats->played_matches + 1,
+            'goal_difference' => $currentStats->goal_difference + ($teamScore - $opponentScore),
+        ];
+
+        if ($teamScore > $opponentScore) {
+            $stats['won'] = $currentStats->won + 1;
+            $stats['points'] = $currentStats->points + 3;
+        } elseif ($teamScore < $opponentScore) {
+            $stats['lost'] = $currentStats->lost + 1;
+        } else {
+            $stats['drawn'] = $currentStats->drawn + 1;
+            $stats['points'] = $currentStats->points + 1;
+        }
+
+        return $stats;
     }
 }
