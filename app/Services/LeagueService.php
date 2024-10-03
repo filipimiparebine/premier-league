@@ -9,7 +9,7 @@ use App\Interfaces\WeekRepositoryInterface;
 use App\Interfaces\SeasonRepositoryInterface;
 use App\Models\SeasonLeaderboard;
 
-class LeagueSimulationService
+class LeagueService
 {
     public function __construct(
         private TeamRepositoryInterface $teamRepository,
@@ -90,24 +90,31 @@ class LeagueSimulationService
             $awayScore = rand(0, 5);
 
             $this->weekRepository->updateMatchResult($weekMatch->id, $homeScore, $awayScore);
-            $this->updateTeamStats($seasonId, $weekMatch, $homeScore, $awayScore);
+            $this->updateTeamStats($weekMatch, $homeScore, $awayScore);
         }
     }
 
-    private function updateTeamStats(int $seasonId, Week $week, int $homeScore, int $awayScore): void
+    public function updateTeamStats(Week $weekMatch, int $homeScore, int $awayScore, int $oldHomeScore = null, int $oldAwayScore = null): void
     {
-        $homeStats = $this->calculateStats($seasonId, $week->home_team_id, $homeScore, $awayScore);
-        $awayStats = $this->calculateStats($seasonId, $week->away_team_id, $awayScore, $homeScore);
+        $currentHomeStats = SeasonLeaderboard::whereSeasonId($weekMatch->season_id)->whereTeamId($weekMatch->home_team_id)->first();
+        $currentAwayStats = SeasonLeaderboard::whereSeasonId($weekMatch->season_id)->whereTeamId($weekMatch->away_team_id)->first();
 
-        $this->seasonRepository->updateTeamStats($seasonId, $week->home_team_id, $homeStats);
-        $this->seasonRepository->updateTeamStats($seasonId, $week->away_team_id, $awayStats);
+        if (!is_null($oldHomeScore) && !is_null($oldAwayScore)) {
+            $this->revertMatchStats($currentHomeStats, $oldHomeScore, $oldAwayScore);
+            $this->revertMatchStats($currentAwayStats, $oldAwayScore, $oldHomeScore);
+        }
+
+        $homeStats = $this->calculateStats($currentHomeStats, $homeScore, $awayScore);
+        $awayStats = $this->calculateStats($currentAwayStats, $awayScore, $homeScore);
+
+        $this->seasonRepository->updateTeamStats($weekMatch->season_id, $weekMatch->home_team_id, $homeStats);
+        $this->seasonRepository->updateTeamStats($weekMatch->season_id, $weekMatch->away_team_id, $awayStats);
     }
 
-    private function calculateStats(int $seasonId, int $teamId, int $teamScore, int $opponentScore): array
+    private function calculateStats(SeasonLeaderboard $currentStats, int $teamScore, int $opponentScore): array
     {
-        $currentStats = SeasonLeaderboard::whereSeasonId($seasonId)
-            ->whereTeamId($teamId)
-            ->first();
+        $currentStats->refresh();
+
         $stats = [
             'played_matches' => $currentStats->played_matches + 1,
             'goal_difference' => $currentStats->goal_difference + ($teamScore - $opponentScore),
@@ -124,5 +131,36 @@ class LeagueSimulationService
         }
 
         return $stats;
+    }
+
+    private function revertMatchStats(SeasonLeaderboard &$stats, int $teamScore, int $opponentScore)
+    {
+        $stats->played_matches -= 1;
+        $stats->goal_difference -= $teamScore - $opponentScore;
+
+        if ($teamScore > $opponentScore) {
+            $stats->won -= 1;
+            $stats->points -= 3;
+        } elseif ($teamScore < $opponentScore) {
+            $stats->lost -= 1;
+        } else {
+            $stats->drawn -= 1;
+            $stats->points -= 1;
+        }
+        $stats->save();
+    }
+
+    public function updateMatchResult(int $matchId, int $homeScore, int $awayScore): void
+    {
+        $match = $this->weekRepository->find($matchId);
+        if (!$match) {
+            return;
+        }
+
+        $oldHomeScore = $match->home_score;
+        $oldAwayScore = $match->away_score;
+
+        $this->weekRepository->updateMatchResult($matchId, $homeScore, $awayScore);
+        $this->updateTeamStats($match, $homeScore, $awayScore, $oldHomeScore, $oldAwayScore);
     }
 }

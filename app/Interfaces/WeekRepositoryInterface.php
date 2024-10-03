@@ -13,5 +13,5 @@ interface WeekRepositoryInterface
     public function update(int $id, array $data): bool;
     public function delete(int $id): bool;
     public function getWeek(int $seasonId, int $weekNumber): Collection;
-    public function updateMatchResult(int $weekId, int $homeScore, int $awayScore): bool;
+    public function updateMatchResult(int $matchId, int $homeScore, int $awayScore): bool;
 }

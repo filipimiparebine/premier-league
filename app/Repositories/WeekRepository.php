@@ -48,13 +48,13 @@ class WeekRepository implements WeekRepositoryInterface
             ->get();
     }
 
-    public function updateMatchResult(int $weekId, int $homeScore, int $awayScore): bool
+    public function updateMatchResult(int $matchId, int $homeScore, int $awayScore): bool
     {
-        $week = $this->find($weekId);
-        if (!$week) {
+        $match = $this->find($matchId);
+        if (!$match) {
             return false;
         }
-        return $week->update([
+        return $match->update([
             'home_score' => $homeScore,
             'away_score' => $awayScore,
         ]);
