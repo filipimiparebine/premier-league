@@ -46,6 +46,19 @@ services:
             - premier-league-network
         command: php artisan serve --host=0.0.0.0 --port=8000
 
+    premier-league-fe:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        container_name: premier-league-fe
+        restart: unless-stopped
+        ports:
+            - "3000:3000"
+        depends_on:
+            - premier-league-be
+        networks:
+            - premier-league-network
+
 networks:
     premier-league-network:
         driver: bridge
