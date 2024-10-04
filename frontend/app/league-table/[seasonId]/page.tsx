@@ -89,7 +89,7 @@ export default function Leaderboard() {
                     <Skeleton className="h-[350px] rounded-xl" />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 ">
                     <LeagueTable stats={seasonData?.leaderboard || []} />
                     <FixtureList
                         fixtures={fixturesData}
