@@ -15,6 +15,12 @@ class Team extends Model
         'logo'
     ];
 
+
+    protected $hidden = [
+        'created_at',
+        'updated_at'
+    ];
+
     public function seasons(): HasMany
     {
         return $this->hasMany(Season::class);

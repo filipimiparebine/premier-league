@@ -29,6 +29,11 @@ class SeasonLeaderboard extends Model
         'goal_difference'
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at'
+    ];
+
     public function season(): BelongsTo
     {
         return $this->belongsTo(Season::class);

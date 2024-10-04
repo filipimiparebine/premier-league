@@ -78,4 +78,9 @@ class LeagueController extends Controller
     {
         return response()->json($this->weekRepository->find($matchId));
     }
+
+    public function predictWeek(int $seasonId, int $weekNumber): JsonResponse
+    {
+        return response()->json($this->leagueService->predictWeek($seasonId, $weekNumber));
+    }
 }

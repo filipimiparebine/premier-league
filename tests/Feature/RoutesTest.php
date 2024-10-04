@@ -87,7 +87,7 @@ class RoutesTest extends TestCase
             'team_ids' => $teams,
             'season_id' => $season->id
         ]);
-        $res = $this->get("api/simulate-week/{$season->id}/1");
+        $res = $this->get("api/week/simulate/{$season->id}/1");
         $response = json_decode($res->getContent());
         $this->assertEquals('Week simulated successfully', $response->message);
 
@@ -122,7 +122,7 @@ class RoutesTest extends TestCase
             'team_ids' => $teams,
             'season_id' => $season->id
         ]);
-        $this->get("api/simulate-week/{$season->id}/1");
+        $this->get("api/week/simulate/{$season->id}/1");
 
         $res = $this->get("api/league-table/{$season->id}");
 
@@ -159,5 +159,22 @@ class RoutesTest extends TestCase
         $this->assertEquals(0, $firstTeamLeaderboardUpdated->drawn);
         $this->assertEquals(1, $firstTeamLeaderboardUpdated->lost);
         $this->assertEquals(-6, $firstTeamLeaderboardUpdated->goal_difference);
+    }
+
+    public function testPredictWeek()
+    {
+        $teams = Team::pluck('id')->take(4)->toArray();
+        $season = Season::first();
+        $this->postJson('api/start-season', [
+            'team_ids' => $teams,
+            'season_id' => $season->id
+        ]);
+        $this->get("api/week/simulate/{$season->id}/1");
+        $this->get("api/week/simulate/{$season->id}/2");
+        $this->get("api/week/simulate/{$season->id}/3");
+        $res = $this->get("api/week/predict/{$season->id}/4");
+        $response = json_decode($res->getContent(), true);
+        $predictionSum = collect($response)->sum('prediction');
+        $this->assertEquals(100, $predictionSum);
     }
 }

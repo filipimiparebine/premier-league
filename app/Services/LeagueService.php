@@ -11,6 +11,12 @@ use App\Models\SeasonLeaderboard;
 
 class LeagueService
 {
+    private const WEIGHTS = [
+        'POINTS' => 0.4,
+        'WINS' => 0.3,
+        'GOALS' => 0.2,
+        'HOME' => 0.1
+    ];
     public function __construct(
         private TeamRepositoryInterface $teamRepository,
         private SeasonRepositoryInterface $seasonRepository,
@@ -86,12 +92,48 @@ class LeagueService
         $weekMatches = $this->weekRepository->getWeek($seasonId, $weekNumber);
 
         foreach ($weekMatches as $weekMatch) {
-            $homeScore = rand(0, 5);
-            $awayScore = rand(0, 5);
+            $homeTeamStats = SeasonLeaderboard::whereSeasonId($seasonId)->whereTeamId($weekMatch->home_team_id)->first();
+            $awayTeamStats = SeasonLeaderboard::whereSeasonId($seasonId)->whereTeamId($weekMatch->away_team_id)->first();
+
+            $winDiff = $homeTeamStats->won - $awayTeamStats->won;
+            list($homeScore, $awayScore) = $this->scoreFactorWin($winDiff);
 
             $this->weekRepository->updateMatchResult($weekMatch->id, $homeScore, $awayScore);
             $this->updateTeamStats($weekMatch, $homeScore, $awayScore);
         }
+    }
+
+    private function scoreFactorWin(int $winDiff)
+    {
+        $maxGoals = 9;
+        $homeScore = rand(0, $maxGoals);
+        $awayScore = rand(0, $maxGoals);
+
+        if ($winDiff > 0) {
+            $homeScore += $this->boostBasedOnWins($winDiff);
+        } elseif ($winDiff < 0) {
+            $awayScore += $this->boostBasedOnWins($winDiff);
+        }
+
+        $homeScore = min($homeScore, $maxGoals);
+        $awayScore = min($awayScore, $maxGoals);
+
+        return [$homeScore, $awayScore];
+    }
+
+    private function boostBasedOnWins($winDiff)
+    {
+        $absWinDiff = abs($winDiff);
+        if ($absWinDiff > 5) {
+            return 3;
+        }
+        if ($absWinDiff >= 4) {
+            return 2;
+        }
+        if ($absWinDiff >= 2) {
+            return 1;
+        }
+        return 0;
     }
 
     public function updateTeamStats(Week $weekMatch, int $homeScore, int $awayScore, int $oldHomeScore = null, int $oldAwayScore = null): void
@@ -162,5 +204,53 @@ class LeagueService
 
         $this->weekRepository->updateMatchResult($matchId, $homeScore, $awayScore);
         $this->updateTeamStats($match, $homeScore, $awayScore, $oldHomeScore, $oldAwayScore);
+    }
+
+    public function predictWeek(int $seasonId, int $weekNumber)
+    {
+        $weekMatches = $this->weekRepository->getWeek($seasonId, $weekNumber);
+
+        $predictions = collect();
+        foreach ($weekMatches as $weekMatch) {
+            $homeTeamStats = SeasonLeaderboard::whereSeasonId($seasonId)->whereTeamId($weekMatch->home_team_id)->first();
+            $awayTeamStats = SeasonLeaderboard::whereSeasonId($seasonId)->whereTeamId($weekMatch->away_team_id)->first();
+
+            $predictions->add([
+                'team' => $weekMatch->homeTeam,
+                'points' => $this->teamPredictPoints($homeTeamStats, true)
+            ]);
+            $predictions->add([
+                'team' => $weekMatch->awayTeam,
+                'points' => $this->teamPredictPoints($awayTeamStats)
+            ]);
+        }
+
+        $totalPoints = $predictions->sum('points');
+
+        $result = $predictions->map(function ($prediction) use ($totalPoints) {
+            $percentage = ($prediction['points'] / $totalPoints) * 100;
+            return [
+                'team' => $prediction['team'],
+                'prediction' => round($percentage)
+            ];
+        });
+
+        // Correct rounding error
+        $result->first()['prediction'] += 100 - $result->sum('prediction');
+
+        return $result->sortByDesc('prediction');
+    }
+
+    private function teamPredictPoints(SeasonLeaderboard $teamStats, bool $home = false): float
+    {
+        $points = array_sum([
+            self::WEIGHTS['POINTS'] * max(0, $teamStats->points),
+            self::WEIGHTS['WINS'] * max(0, $teamStats->won),
+            self::WEIGHTS['GOALS'] * max(0, $teamStats->goal_difference),
+        ]);
+        if ($home) {
+            return self::WEIGHTS['HOME'] * $points;
+        }
+        return $points;
     }
 }
