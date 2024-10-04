@@ -2,6 +2,8 @@
 
 This project is a Premier League football simulation application built with Laravel 10 (backend) and Next.js (frontend).
 
+![Screenshot 2024-10-04 at 16 53 01](https://github.com/user-attachments/assets/a9cbe8ee-061e-43a8-8388-28750337840b)
+
 ## Features
 
 - Team selection
@@ -27,7 +29,7 @@ cd premier-league-be
 3. Build and run the Docker containers:
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 5. Access the application at `http://localhost:3000`
@@ -37,7 +39,15 @@ docker-compose up -d --build
 To run the backend tests:
 
 ```bash
-docker-compose exec backend vendor/bin/phpunit
+docker-compose exec premier-league-be vendor/bin/phpunit
+```
+
+## Seeding the database
+
+Seeding the database is executed once on docker compose up, but you can also use:
+
+```bash
+docker compose exec premier-league-be php artisan db:seed --class=DatabaseSeeder
 ```
 
 ## CI/CD
