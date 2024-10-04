@@ -8,19 +8,21 @@ use Illuminate\Database\Eloquent\Collection;
 
 class TeamRepository implements TeamRepositoryInterface
 {
+    public function __construct(protected Team $team) {}
+
     public function all(): Collection
     {
-        return Team::all();
+        return $this->team->all();
     }
 
     public function find(int $id): ?Team
     {
-        return Team::find($id);
+        return $this->team->find($id);
     }
 
     public function create(array $data): Team
     {
-        return Team::create($data);
+        return $this->team->create($data);
     }
 
     public function update(int $id, array $data): bool
@@ -29,6 +31,7 @@ class TeamRepository implements TeamRepositoryInterface
         if (!$team) {
             return false;
         }
+
         return $team->update($data);
     }
 
@@ -38,6 +41,7 @@ class TeamRepository implements TeamRepositoryInterface
         if (!$team) {
             return false;
         }
+
         return $team->delete();
     }
 }

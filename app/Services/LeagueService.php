@@ -3,13 +3,14 @@
 namespace App\Services;
 
 use App\Models\Week;
-use Illuminate\Support\Collection;
+use App\Models\SeasonLeaderboard;
+use App\Interfaces\LeagueServiceInterface;
 use App\Interfaces\TeamRepositoryInterface;
 use App\Interfaces\WeekRepositoryInterface;
+use App\Interfaces\FixtureGeneratorInterface;
 use App\Interfaces\SeasonRepositoryInterface;
-use App\Models\SeasonLeaderboard;
 
-class LeagueService
+class LeagueService implements LeagueServiceInterface
 {
     private const WEIGHTS = [
         'POINTS' => 0.4,
@@ -20,7 +21,8 @@ class LeagueService
     public function __construct(
         private TeamRepositoryInterface $teamRepository,
         private SeasonRepositoryInterface $seasonRepository,
-        private WeekRepositoryInterface $weekRepository
+        private WeekRepositoryInterface $weekRepository,
+        private FixtureGeneratorInterface $fixtureGenerator
     ) {}
 
     public function generateFixtures(array $teamIds, int $seasonId): void
@@ -33,8 +35,7 @@ class LeagueService
             $existingFixtures->each(fn($week) => $week->delete());
         }
 
-        $generator = new FixtureGenerator();
-        $fixtures = $generator->generateFixtures($teams);
+        $fixtures = $this->fixtureGenerator->generateFixtures($teams);
 
         foreach ($fixtures as $weekNumber => $matches) {
             foreach ($matches as $match) {
@@ -167,7 +168,7 @@ class LeagueService
         $this->updateTeamStats($match, $homeScore, $awayScore, $oldHomeScore, $oldAwayScore);
     }
 
-    public function predictWeek(int $seasonId, int $weekNumber)
+    public function predictWeek(int $seasonId, int $weekNumber): array
     {
         $weekMatches = $this->weekRepository->getWeek($seasonId, $weekNumber);
 
@@ -192,7 +193,7 @@ class LeagueService
             $percentage = ($prediction['points'] / $totalPoints) * 100;
             return [
                 'team' => $prediction['team'],
-                'prediction' => round($percentage)
+                'prediction' => max(5, round($percentage))
             ];
         });
 
@@ -215,6 +216,7 @@ class LeagueService
         if ($home) {
             return self::WEIGHTS['HOME'] * $points;
         }
+
         return $points;
     }
 }
