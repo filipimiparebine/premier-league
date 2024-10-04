@@ -24,15 +24,13 @@ git clone https://github.com/filipimiparebine/premier-league-be.git
 cd premier-league-be
 ```
 
-2. Create a `.env` file in the backend directory and configure your database settings.
-
-3. Build and run the Docker containers:
+1. Run project:
 
 ```bash
-docker compose up -d --build
+./run.sh
 ```
 
-5. Access the application at `http://localhost:3000`
+3. Access the application at `http://localhost:3000`
 
 ## Running Tests
 
