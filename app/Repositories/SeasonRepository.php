@@ -59,7 +59,6 @@ class SeasonRepository implements SeasonRepositoryInterface
     public function fillLeagueTable(array $teamIds, int $seasonId): void
     {
         SeasonLeaderboard::whereSeasonId($seasonId)->delete();
-        Week::whereSeasonId($seasonId)->delete();
         foreach ($teamIds as $teamId) {
             SeasonLeaderboard::create([
                 'season_id' => $seasonId,
