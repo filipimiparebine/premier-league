@@ -2,9 +2,10 @@
 
 namespace App\Services;
 
+use App\Interfaces\FixtureGeneratorInterface;
 use Illuminate\Support\Collection;
 
-class FixtureGenerator
+class FixtureGenerator implements FixtureGeneratorInterface
 {
     private Collection $teams;
     private int $teamCount;
@@ -26,6 +27,7 @@ class FixtureGenerator
             $this->teams->push(null);
             $count++;
         }
+
         return $count;
     }
 
@@ -64,8 +66,8 @@ class FixtureGenerator
     {
         return $homeIndex < count($this->teamIds)
             && $awayIndex < count($this->teamIds)
-            && $this->teamIds[$homeIndex] !== null
-            && $this->teamIds[$awayIndex] !== null;
+            && isset($this->teamIds[$homeIndex])
+            && isset($this->teamIds[$awayIndex]);
     }
 
     private function createMatch(int $homeIndex, int $awayIndex, bool $isSecondHalf): array
