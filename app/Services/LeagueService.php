@@ -33,7 +33,8 @@ class LeagueService
             $existingFixtures->each(fn($week) => $week->delete());
         }
 
-        $fixtures = $this->createFixtures($teams);
+        $generator = new FixtureGenerator();
+        $fixtures = $generator->generateFixtures($teams);
 
         foreach ($fixtures as $weekNumber => $matches) {
             foreach ($matches as $match) {
@@ -45,46 +46,6 @@ class LeagueService
                 ]);
             }
         }
-    }
-
-    private function createFixtures(Collection $teams): array
-    {
-        $teamCount = $teams->count();
-        // Ensure there is an even number of teams by adding a dummy team if necessary.
-        if ($teamCount % 2 !== 0) {
-            $teams->push(null); // Add a dummy team (null) to make the count even.
-            $teamCount++;
-        }
-        $rounds = ($teamCount - 1) * 2;  // Each team plays home and away, so double the rounds.
-        $matchesPerRound = $teamCount / 2;
-
-        $teamIds = $teams->pluck('id')->toArray();
-
-        $fixtures = [];
-        // Generate fixtures for each round
-        for ($round = 0; $round < $rounds; $round++) {
-            $roundMatches = [];
-            // Generate matches for the current round
-            for ($match = 0; $match < $matchesPerRound; $match++) {
-                $homeTeam = $teamIds[$match];
-                $awayTeam = $teamIds[$teamCount - 1 - $match];
-                // Skip matches involving the dummy team
-                if ($homeTeam === null || $awayTeam === null) {
-                    continue;
-                }
-                // In the first half of the rounds, the home team is fixed, in the second half, it's reversed.
-                $roundMatches[] = ($round < $rounds / 2)
-                    ? ['home' => $homeTeam, 'away' => $awayTeam]
-                    : ['home' => $awayTeam, 'away' => $homeTeam];
-            }
-
-            $fixtures[] = $roundMatches;
-
-            // Rotate the teams for the next round (except for the first team)
-            array_splice($teamIds, 1, 0, array_pop($teamIds));
-        }
-
-        return $fixtures;
     }
 
     public function simulateWeek(int $seasonId, int $weekNumber): void

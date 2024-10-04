@@ -32,7 +32,7 @@ export default function SelectTeams() {
     const [teams, setTeams] = useState<Team[]>([]);
     const [seasons, setSeasons] = useState<Season[]>([]);
     const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
-    const [selectedSeason, setSelectedSeason] = useState<number | null>(1);
+    const [selectedSeason, setSelectedSeason] = useState<number | null>();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const router = useRouter();
 
@@ -45,6 +45,7 @@ export default function SelectTeams() {
                 ]);
                 setTeams(teamsResponse.data);
                 setSeasons(seasonsResponse.data);
+                setSelectedSeason(seasonsResponse.data[0].id);
                 setIsLoading(false);
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -59,10 +60,6 @@ export default function SelectTeams() {
                 ? prev.filter((id) => id !== teamId)
                 : [...prev, teamId]
         );
-    };
-
-    const handleSeasonToggle = (seasonId: number) => {
-        setSelectedSeason((prev) => (prev === seasonId ? null : seasonId));
     };
 
     const handleSubmit = async () => {
@@ -104,7 +101,12 @@ export default function SelectTeams() {
                                 <CardTitle>Select Season</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Select defaultValue="1">
+                                <Select
+                                    defaultValue={selectedSeason?.toString()}
+                                    onValueChange={(value) =>
+                                        setSelectedSeason(Number(value))
+                                    }
+                                >
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Season" />
                                     </SelectTrigger>
