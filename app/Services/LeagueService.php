@@ -202,7 +202,7 @@ class LeagueService
         $firstItem['prediction'] += 100 - $predictionSum;
         $result = $result->splice(1)->prepend($firstItem);
 
-        return $result->sortByDesc('prediction');
+        return $result->sortByDesc('prediction')->values()->all();
     }
 
     private function teamPredictPoints(SeasonLeaderboard $teamStats, bool $home = false): float

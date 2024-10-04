@@ -2,10 +2,11 @@
 
 namespace App\Repositories;
 
+use App\Models\Week;
 use App\Models\Season;
-use App\Interfaces\SeasonRepositoryInterface;
 use App\Models\SeasonLeaderboard;
 use Illuminate\Database\Eloquent\Collection;
+use App\Interfaces\SeasonRepositoryInterface;
 
 class SeasonRepository implements SeasonRepositoryInterface
 {
