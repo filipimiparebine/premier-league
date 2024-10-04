@@ -236,7 +236,10 @@ class LeagueService
         });
 
         // Correct rounding error
-        $result->first()['prediction'] += 100 - $result->sum('prediction');
+        $firstItem = $result->first();
+        $predictionSum = $result->sum('prediction');
+        $firstItem['prediction'] += 100 - $predictionSum;
+        $result = $result->splice(1)->prepend($firstItem);
 
         return $result->sortByDesc('prediction');
     }
