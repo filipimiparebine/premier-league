@@ -3,34 +3,55 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { LeagueTable } from "@/components/LeagueTable";
+import { FixtureList } from "@/components/FixtureList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Season } from "@/types/league";
+import { Fixture } from "@/types/fixture";
 
 export default function Leaderboard() {
     const params = useParams();
     const { seasonId } = params;
     const [seasonData, setSeasonData] = useState<Season>();
+    const [fixturesData, setFixturesData] = useState<Fixture[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [weekNumber, setWeekNumber] = useState(1);
+
+    const fetchData = async () => {
+        try {
+            const [leagueTableResponse, fixturesRespons] = await Promise.all([
+                axios.get<Season>(
+                    `http://localhost:8000/api/league-table/${seasonId}`
+                ),
+                axios.get<Fixture[]>(
+                    `http://localhost:8000/api/fixtures/${seasonId}/${weekNumber}`
+                ),
+            ]);
+            setSeasonData(leagueTableResponse.data);
+            setFixturesData(fixturesRespons.data);
+            setIsLoading(false);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [leagueTableResponse] = await Promise.all([
-                    axios.get<Season>(
-                        `http://localhost:8000/api/league-table/${seasonId}`
-                    ),
-                ]);
-                setSeasonData(leagueTableResponse.data);
-                setIsLoading(false);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
         fetchData();
     }, [seasonId]);
+
+    const handleNextWeek = async () => {
+        await axios
+            .get<Season>(
+                `http://localhost:8000/api/week/simulate/${seasonId}/${weekNumber}`
+            )
+            .catch((error) => console.error("Error fetching data:", error))
+            .then(() => {
+                fetchData();
+            });
+        setWeekNumber(weekNumber + 1);
+    };
 
     return (
         <div className="container mx-auto p-4">
@@ -46,21 +67,23 @@ export default function Leaderboard() {
             </h2>
 
             {isLoading ? (
-                <Skeleton className="h-[400px] w-full rounded-xl" />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <Skeleton className="h-[340px] lg:col-span-2 rounded-xl" />
+                    <Skeleton className="h-[340px] rounded-xl" />
+                </div>
             ) : (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>League Table</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto">
-                            <LeagueTable
-                                stats={seasonData?.leaderboard || []}
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <LeagueTable stats={seasonData?.leaderboard || []} />
+                    <FixtureList
+                        fixtures={fixturesData}
+                        weekNumber={weekNumber}
+                    />
+                </div>
             )}
+            <div className="mt-3 flex justify-between">
+                <Button>Play all</Button>
+                <Button onClick={handleNextWeek}>Next Week</Button>
+            </div>
         </div>
     );
 }
