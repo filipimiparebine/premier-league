@@ -12,12 +12,11 @@ import { LeagueTableProps } from "@/types/league";
 
 export function LeagueTable({ stats }: LeagueTableProps) {
     return (
-        <Card className="lg:col-span-2 h-[340px]">
+        <Card className="lg:col-span-2 max-h-[350px] overflow-hidden">
             <CardHeader>
                 <CardTitle>League Table</CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className="overflow-x-auto"></div>
+            <CardContent className="h-[310px] overflow-scroll">
                 <Table>
                     <TableHeader>
                         <TableRow>

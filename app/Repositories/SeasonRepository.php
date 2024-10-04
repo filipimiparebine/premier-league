@@ -2,10 +2,11 @@
 
 namespace App\Repositories;
 
+use App\Models\Week;
 use App\Models\Season;
-use App\Interfaces\SeasonRepositoryInterface;
 use App\Models\SeasonLeaderboard;
 use Illuminate\Database\Eloquent\Collection;
+use App\Interfaces\SeasonRepositoryInterface;
 
 class SeasonRepository implements SeasonRepositoryInterface
 {
@@ -58,6 +59,7 @@ class SeasonRepository implements SeasonRepositoryInterface
     public function fillLeagueTable(array $teamIds, int $seasonId): void
     {
         SeasonLeaderboard::whereSeasonId($seasonId)->delete();
+        Week::whereSeasonId($seasonId)->delete();
         foreach ($teamIds as $teamId) {
             SeasonLeaderboard::create([
                 'season_id' => $seasonId,

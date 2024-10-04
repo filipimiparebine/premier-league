@@ -4,15 +4,15 @@ import { FixtureListProps } from "@/types/fixture";
 
 export function FixtureList({ fixtures, weekNumber }: FixtureListProps) {
     return (
-        <Card className="h-[340px]">
+        <Card className="max-h-[350px] overflow-hidden">
             <CardHeader>
                 <CardTitle>Week {weekNumber} Fixtures</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-h-[310px] overflow-scroll">
                 {fixtures.map((fixture) => (
                     <div
                         key={fixture.id}
-                        className="flex items-center justify-between mb-4"
+                        className="flex items-center justify-between mb-4 text-sm"
                     >
                         <div className="flex items-center space-x-2">
                             <Image
