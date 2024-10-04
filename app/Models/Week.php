@@ -19,6 +19,17 @@ class Week extends Model
         'away_score'
     ];
 
+
+    protected $with = [
+        'homeTeam',
+        'awayTeam'
+    ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at'
+    ];
+
     public function season(): BelongsTo
     {
         return $this->belongsTo(Season::class);
