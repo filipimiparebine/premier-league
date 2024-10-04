@@ -37,7 +37,7 @@ docker-compose up -d --build
 To run the backend tests:
 
 ```bash
-docker-compose exec backend vendor/bin/phpunit
+docker-compose exec premier-league-be vendor/bin/phpunit
 ```
 
 ## CI/CD
