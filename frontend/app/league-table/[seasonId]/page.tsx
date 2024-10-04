@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { LeagueTable } from "@/components/LeagueTable";
 import { FixtureList } from "@/components/FixtureList";
 import { WeekPrediction } from "@/components/WeekPrediction";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Season } from "@/types/league";
@@ -24,7 +23,7 @@ export default function Leaderboard() {
     );
     const [weekNumber, setWeekNumber] = useState(1);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [leagueTableResponse, fixturesResponse] = await Promise.all([
                 axios.get<Season>(
@@ -40,11 +39,11 @@ export default function Leaderboard() {
         } catch (error) {
             console.error("Error fetching data:", error);
         }
-    };
+    }, [seasonId, weekNumber]);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
     const getPredictions = async () => {
         try {
