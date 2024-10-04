@@ -23,7 +23,7 @@ export default function Leaderboard() {
     );
     const [weekNumber, setWeekNumber] = useState(1);
 
-    const fetchData = useCallback(async () => {
+    const fetchData = async () => {
         try {
             const [leagueTableResponse, fixturesResponse] = await Promise.all([
                 axios.get<Season>(
@@ -39,11 +39,11 @@ export default function Leaderboard() {
         } catch (error) {
             console.error("Error fetching data:", error);
         }
-    }, [seasonId, weekNumber]);
+    };
 
     useEffect(() => {
         fetchData();
-    }, [fetchData]);
+    }, []);
 
     const getPredictions = async () => {
         try {
@@ -89,7 +89,7 @@ export default function Leaderboard() {
                     <Skeleton className="h-[350px] rounded-xl" />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 ">
                     <LeagueTable stats={seasonData?.leaderboard || []} />
                     <FixtureList
                         fixtures={fixturesData}
@@ -98,7 +98,7 @@ export default function Leaderboard() {
                 </div>
             )}
             <div className="my-3 flex justify-between">
-                <Button>Play all</Button>
+                <Button disabled={true}>Play all</Button>
                 <Button onClick={handleNextWeek}>Next Week</Button>
             </div>
             {weekNumber > 2 && (
