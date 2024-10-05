@@ -2,7 +2,7 @@
 
 This project is a Premier League football simulation application built with Laravel 10 (backend) and Next.js (frontend).
 
-![Screenshot 2024-10-04 at 16 53 01](https://github.com/user-attachments/assets/a9cbe8ee-061e-43a8-8388-28750337840b)
+![premier-league-simulation](https://github.com/user-attachments/assets/da95db5d-382a-426c-a7b7-922d2183460d)
 
 ## Features
 
