@@ -11,7 +11,16 @@ export interface Fixture {
     home_team: Team;
     away_team: Team;
 }
-export interface FixtureListProps {
+
+export interface FixtureResponse {
     fixtures: Fixture[];
+    totalWeeks: number;
+}
+
+export interface FixtureListProps {
+    fixtures: Fixture[] | undefined;
     weekNumber: number;
+    nextOrPlay: boolean;
+    totalWeeks: number| undefined;
+    fetchData: () => Promise<void>;
 }
