@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\WeekException;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StartSeasonRequest;
@@ -61,14 +62,20 @@ class LeagueController extends Controller
     {
         $fixtures = $this->weekRepository->getWeek($seasonId, $weekNumber);
 
-        return response()->json($fixtures);
+        return response()->json([
+            'fixtures' => $fixtures,
+            'totalWeeks' => $fixtures->first()->total_weeks_for_season
+        ]);
     }
 
     public function simulateWeek(int $seasonId, int $weekNumber): JsonResponse
     {
-        $this->leagueService->simulateWeek($seasonId, $weekNumber);
-
-        return response()->json(['message' => 'Week simulated successfully']);
+        try {
+            $this->leagueService->simulateWeek($seasonId, $weekNumber);
+            return response()->json(['message' => 'Week simulated successfully']);
+        } catch (WeekException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 
     public function updateMatchResult(UpdateMatchRequest $request, int $matchId): JsonResponse
@@ -85,6 +92,11 @@ class LeagueController extends Controller
 
     public function predictWeek(int $seasonId, int $weekNumber): JsonResponse
     {
-        return response()->json($this->leagueService->predictWeek($seasonId, $weekNumber));
+
+        try {
+            return response()->json($this->leagueService->predictWeek($seasonId, $weekNumber));
+        } catch (WeekException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 }

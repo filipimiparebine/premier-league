@@ -76,7 +76,7 @@ class RoutesTest extends TestCase
         $res = $this->get("api/fixtures/{$season->id}/1");
 
         $response = json_decode($res->getContent());
-        $this->assertEquals(5, count($response));
+        $this->assertEquals(5, count($response->fixtures));
     }
 
     public function testSimulateWeek()
@@ -102,7 +102,7 @@ class RoutesTest extends TestCase
         $res = $this->get("api/fixtures/{$season->id}/1");
 
         $response = json_decode($res->getContent());
-        $match = collect($response)
+        $match = collect($response->fixtures)
             ->first(fn($match) => $match->home_team_id == $firstTeam->team_id || $match->away_team_id == $firstTeam->team_id);
 
         $this->assertNotNull($match);
@@ -131,8 +131,8 @@ class RoutesTest extends TestCase
 
         $res = $this->get("api/fixtures/{$season->id}/1");
         $response = json_decode($res->getContent());
-        $homeMatch = collect($response)->first(fn($match) => $match->home_team_id == $firstTeamLeaderboard->team_id);
-        $awayMatch = collect($response)->first(fn($match) => $match->away_team_id == $firstTeamLeaderboard->team_id);
+        $homeMatch = collect($response->fixtures)->first(fn($match) => $match->home_team_id == $firstTeamLeaderboard->team_id);
+        $awayMatch = collect($response->fixtures)->first(fn($match) => $match->away_team_id == $firstTeamLeaderboard->team_id);
         $match = $homeMatch ?? $awayMatch;
         $updateMatchBody = $homeMatch ? [
             'home_score' => 0,
