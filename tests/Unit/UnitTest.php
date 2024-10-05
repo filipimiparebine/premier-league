@@ -2,12 +2,11 @@
 
 namespace Tests\Unit;
 
+use App\Interfaces\LeagueServiceInterface;
 use Tests\TestCase;
 use App\Models\Team;
 use App\Models\Week;
 use App\Models\Season;
-use App\Services\LeagueService;
-use Database\Seeders\TeamSeeder;
 use Database\Seeders\DatabaseSeeder;
 use App\Interfaces\TeamRepositoryInterface;
 use App\Interfaces\WeekRepositoryInterface;
@@ -36,7 +35,7 @@ class UnitTest extends TestCase
         $this->teamRepository = resolve(TeamRepositoryInterface::class);
         $this->weekRepository = resolve(WeekRepositoryInterface::class);
         $this->seasonRepository = resolve(SeasonRepositoryInterface::class);
-        $this->leagueService = resolve(LeagueService::class);
+        $this->leagueService = resolve(LeagueServiceInterface::class);
     }
 
     public function testGetTeams()

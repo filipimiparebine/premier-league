@@ -44,4 +44,9 @@ class Week extends Model
     {
         return $this->belongsTo(Team::class, 'away_team_id');
     }
+
+    public function getTotalWeeksForSeasonAttribute(): int
+    {
+        return self::where('season_id', $this->season_id)->orderByDesc('week_number')->first()->week_number;
+    }
 }

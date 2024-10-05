@@ -10,19 +10,21 @@ use App\Interfaces\SeasonRepositoryInterface;
 
 class SeasonRepository implements SeasonRepositoryInterface
 {
+    public function __construct(protected Season $season) {}
+
     public function all(): Collection
     {
-        return Season::all();
+        return $this->season->all();
     }
 
     public function find(int $id): ?Season
     {
-        return Season::find($id);
+        return $this->season->find($id);
     }
 
     public function create(array $data): Season
     {
-        return Season::create($data);
+        return $this->season->create($data);
     }
 
     public function update(int $id, array $data): bool
@@ -31,6 +33,7 @@ class SeasonRepository implements SeasonRepositoryInterface
         if (!$season) {
             return false;
         }
+
         return $season->update($data);
     }
 
@@ -40,6 +43,7 @@ class SeasonRepository implements SeasonRepositoryInterface
         if (!$season) {
             return false;
         }
+
         return $season->delete();
     }
 

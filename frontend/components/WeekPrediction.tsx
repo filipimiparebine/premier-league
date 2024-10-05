@@ -7,7 +7,7 @@ export function WeekPrediction({
     predictions,
 }: WeekPredictionProps) {
     return (
-        <Card className="lg:col-span-3">
+        <Card className="min-h-[115px] lg:col-span-3">
             <CardHeader>
                 <CardTitle>Week {weekNumber + 1} Predictions</CardTitle>
             </CardHeader>

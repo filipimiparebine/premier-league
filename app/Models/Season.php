@@ -25,6 +25,6 @@ class Season extends Model
 
     public function leaderboard(): HasMany
     {
-        return $this->hasMany(SeasonLeaderboard::class)->orderByDesc('points');
+        return $this->hasMany(SeasonLeaderboard::class)->orderByDesc('points')->orderByDesc('goal_difference');
     }
 }

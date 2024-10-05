@@ -2,14 +2,16 @@
 
 namespace App\Services;
 
+use App\Exceptions\WeekException;
 use App\Models\Week;
-use Illuminate\Support\Collection;
+use App\Models\SeasonLeaderboard;
+use App\Interfaces\LeagueServiceInterface;
 use App\Interfaces\TeamRepositoryInterface;
 use App\Interfaces\WeekRepositoryInterface;
+use App\Interfaces\FixtureGeneratorInterface;
 use App\Interfaces\SeasonRepositoryInterface;
-use App\Models\SeasonLeaderboard;
 
-class LeagueService
+class LeagueService implements LeagueServiceInterface
 {
     private const WEIGHTS = [
         'POINTS' => 0.4,
@@ -20,7 +22,8 @@ class LeagueService
     public function __construct(
         private TeamRepositoryInterface $teamRepository,
         private SeasonRepositoryInterface $seasonRepository,
-        private WeekRepositoryInterface $weekRepository
+        private WeekRepositoryInterface $weekRepository,
+        private FixtureGeneratorInterface $fixtureGenerator
     ) {}
 
     public function generateFixtures(array $teamIds, int $seasonId): void
@@ -33,8 +36,7 @@ class LeagueService
             $existingFixtures->each(fn($week) => $week->delete());
         }
 
-        $generator = new FixtureGenerator();
-        $fixtures = $generator->generateFixtures($teams);
+        $fixtures = $this->fixtureGenerator->generateFixtures($teams);
 
         foreach ($fixtures as $weekNumber => $matches) {
             foreach ($matches as $match) {
@@ -51,50 +53,46 @@ class LeagueService
     public function simulateWeek(int $seasonId, int $weekNumber): void
     {
         $weekMatches = $this->weekRepository->getWeek($seasonId, $weekNumber);
+        $predictions = $this->predictWeek($seasonId, $weekNumber);
+
+        $predictionsByTeam = collect($predictions)->keyBy(function ($prediction) {
+            return $prediction['team']->id;
+        });
 
         foreach ($weekMatches as $weekMatch) {
-            $homeTeamStats = SeasonLeaderboard::whereSeasonId($seasonId)->whereTeamId($weekMatch->home_team_id)->first();
-            $awayTeamStats = SeasonLeaderboard::whereSeasonId($seasonId)->whereTeamId($weekMatch->away_team_id)->first();
+            if ($weekMatch->home_score && $weekMatch->away_score) {
+                continue;
+            }
+            $homePrediction = $predictionsByTeam[$weekMatch->home_team_id]['prediction'];
+            $awayPrediction = $predictionsByTeam[$weekMatch->away_team_id]['prediction'];
 
-            $winDiff = $homeTeamStats->won - $awayTeamStats->won;
-            list($homeScore, $awayScore) = $this->scoreFactorWin($winDiff);
+            list($homeScore, $awayScore) = $this->calculatePredictionBasedScore($homePrediction, $awayPrediction);
 
             $this->weekRepository->updateMatchResult($weekMatch->id, $homeScore, $awayScore);
             $this->updateTeamStats($weekMatch, $homeScore, $awayScore);
         }
     }
 
-    private function scoreFactorWin(int $winDiff)
+    private function calculatePredictionBasedScore(float $homePrediction, float $awayPrediction): array
     {
-        $maxGoals = 9;
-        $homeScore = rand(0, $maxGoals);
-        $awayScore = rand(0, $maxGoals);
+        $maxGoals = 5;
 
-        if ($winDiff > 0) {
-            $homeScore += $this->boostBasedOnWins($winDiff);
-        } elseif ($winDiff < 0) {
-            $awayScore += $this->boostBasedOnWins($winDiff);
+        $homeScoringChance = $homePrediction / 100;
+        $awayScoringChance = $awayPrediction / 100;
+
+        $homeScore = 0;
+        $awayScore = 0;
+
+        for ($i = 0; $i < $maxGoals; $i++) {
+            if (rand(0, 100) / 100 < $homeScoringChance) {
+                $homeScore++;
+            }
+            if (rand(0, 100) / 100 < $awayScoringChance) {
+                $awayScore++;
+            }
         }
-
-        $homeScore = min($homeScore, $maxGoals);
-        $awayScore = min($awayScore, $maxGoals);
 
         return [$homeScore, $awayScore];
-    }
-
-    private function boostBasedOnWins($winDiff)
-    {
-        $absWinDiff = abs($winDiff);
-        if ($absWinDiff > 5) {
-            return 3;
-        }
-        if ($absWinDiff >= 4) {
-            return 2;
-        }
-        if ($absWinDiff >= 2) {
-            return 1;
-        }
-        return 0;
     }
 
     public function updateTeamStats(Week $weekMatch, int $homeScore, int $awayScore, int $oldHomeScore = null, int $oldAwayScore = null): void
@@ -167,9 +165,13 @@ class LeagueService
         $this->updateTeamStats($match, $homeScore, $awayScore, $oldHomeScore, $oldAwayScore);
     }
 
-    public function predictWeek(int $seasonId, int $weekNumber)
+    public function predictWeek(int $seasonId, int $weekNumber): array
     {
         $weekMatches = $this->weekRepository->getWeek($seasonId, $weekNumber);
+
+        if ($weekMatches->isEmpty()) {
+            throw new WeekException("No matches scheduled for week {$weekNumber}");
+        }
 
         $predictions = collect();
         foreach ($weekMatches as $weekMatch) {
@@ -188,21 +190,39 @@ class LeagueService
 
         $totalPoints = $predictions->sum('points');
 
+        if ($totalPoints == 0) {
+            $teamCount = $predictions->count();
+            $equalPercentage = round(100 / $teamCount);
+
+            $result = $predictions->map(function ($prediction) use ($equalPercentage) {
+                return [
+                    'team' => $prediction['team'],
+                    'prediction' => $equalPercentage
+                ];
+            })->sortByDesc('prediction');
+            $this->correctRoundingError($result);
+
+            return $result->sortByDesc('prediction')->values()->all();
+        }
+
         $result = $predictions->map(function ($prediction) use ($totalPoints) {
             $percentage = ($prediction['points'] / $totalPoints) * 100;
             return [
                 'team' => $prediction['team'],
-                'prediction' => round($percentage)
+                'prediction' => round(max(2, $percentage))
             ];
-        });
+        })->sortByDesc('prediction');
+        $this->correctRoundingError($result);
 
-        // Correct rounding error
+        return $result->sortByDesc('prediction')->values()->all();
+    }
+
+    private function correctRoundingError(&$result)
+    {
         $firstItem = $result->first();
         $predictionSum = $result->sum('prediction');
         $firstItem['prediction'] += 100 - $predictionSum;
         $result = $result->splice(1)->prepend($firstItem);
-
-        return $result->sortByDesc('prediction')->values()->all();
     }
 
     private function teamPredictPoints(SeasonLeaderboard $teamStats, bool $home = false): float
@@ -213,8 +233,9 @@ class LeagueService
             self::WEIGHTS['GOALS'] * max(0, $teamStats->goal_difference),
         ]);
         if ($home) {
-            return self::WEIGHTS['HOME'] * $points;
+            $points += self::WEIGHTS['HOME'] * $points;
         }
+
         return $points;
     }
 }

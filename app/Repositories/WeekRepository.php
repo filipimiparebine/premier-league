@@ -8,19 +8,21 @@ use Illuminate\Database\Eloquent\Collection;
 
 class WeekRepository implements WeekRepositoryInterface
 {
+    public function __construct(protected Week $week) {}
+
     public function all(): Collection
     {
-        return Week::all();
+        return $this->week->all();
     }
 
     public function find(int $id): ?Week
     {
-        return Week::find($id);
+        return $this->week->find($id);
     }
 
     public function create(array $data): Week
     {
-        return Week::create($data);
+        return $this->week->create($data);
     }
 
     public function update(int $id, array $data): bool
@@ -29,6 +31,7 @@ class WeekRepository implements WeekRepositoryInterface
         if (!$week) {
             return false;
         }
+
         return $week->update($data);
     }
 
@@ -38,6 +41,7 @@ class WeekRepository implements WeekRepositoryInterface
         if (!$week) {
             return false;
         }
+
         return $week->delete();
     }
 
@@ -54,6 +58,7 @@ class WeekRepository implements WeekRepositoryInterface
         if (!$match) {
             return false;
         }
+
         return $match->update([
             'home_score' => $homeScore,
             'away_score' => $awayScore,
