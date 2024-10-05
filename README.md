@@ -11,6 +11,8 @@ This project is a Premier League football simulation application built with Lara
 - Week fixtures (week matches to be played)
 - Match simulation
 - Match prediction
+- Edit match result
+- Simulate all
 - Unit and feature testing with PHPUnit
 - Dockerized
 - Github CI Pipelines
