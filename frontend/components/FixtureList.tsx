@@ -10,7 +10,6 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useState } from "react";
-import axios from "axios";
 import {
     Dialog,
     DialogContent,
@@ -28,6 +27,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import ApiService from "@/services/apiService";
 
 export function FixtureList({
     fixtures,
@@ -48,12 +48,24 @@ export function FixtureList({
     };
     const handleScoreUpdate = async () => {
         try {
-            await axios.put(
-                `http://localhost:8000/api/match/${selectedFixture?.id}`,
-                {
-                    home_score: parseInt(homeScore),
-                    away_score: parseInt(awayScore),
-                }
+            const matchId = selectedFixture?.id;
+
+            if (!matchId) {
+                alert("Match ID is not defined");
+                return;
+            }
+
+            const parsedHomeScore = parseInt(homeScore);
+            const parsedAwayScore = parseInt(awayScore);
+
+            if (isNaN(parsedHomeScore) || isNaN(parsedAwayScore)) {
+                alert("Invalid score values");
+                return;
+            }
+            await ApiService.updateMatchScore(
+                matchId,
+                parsedHomeScore,
+                parsedAwayScore
             );
 
             setSelectedFixture(null);

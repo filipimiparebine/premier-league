@@ -21,8 +21,13 @@ export interface LeagueTableProps {
     stats: Leaderboard[];
 }
 
-export interface Season {
+export interface SeasonLeaderboard {
     id: number;
     name: string;
     leaderboard: Leaderboard[];
+}
+
+export interface Season {
+    id: number;
+    name: string;
 }
