@@ -8,6 +8,8 @@ RUN npm ci
 
 COPY . .
 
+RUN cp .env.example .env
+
 RUN npm run build
 
 EXPOSE 3000
