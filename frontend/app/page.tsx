@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,17 +15,8 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface Team {
-    id: number;
-    name: string;
-    logo: string;
-}
-
-interface Season {
-    id: number;
-    name: string;
-}
+import ApiService from "@/services/apiService";
+import { Team, Season } from "@/types/league";
 
 export default function SelectTeams() {
     const [teams, setTeams] = useState<Team[]>([]);
@@ -40,8 +30,8 @@ export default function SelectTeams() {
         const fetchData = async () => {
             try {
                 const [teamsResponse, seasonsResponse] = await Promise.all([
-                    axios.get<Team[]>("http://localhost:8000/api/teams"),
-                    axios.get<Season[]>("http://localhost:8000/api/seasons"),
+                    ApiService.getTeams(),
+                    ApiService.getSeasons(),
                 ]);
                 setTeams(teamsResponse.data);
                 setSeasons(seasonsResponse.data);
@@ -72,10 +62,7 @@ export default function SelectTeams() {
             return;
         }
         try {
-            await axios.post("http://localhost:8000/api/start-season", {
-                team_ids: selectedTeams,
-                season_id: selectedSeason,
-            });
+            await ApiService.startSeason(selectedTeams, selectedSeason);
             router.push(`/league-table/${selectedSeason}`);
         } catch (error) {
             console.error("Error starting season:", error);

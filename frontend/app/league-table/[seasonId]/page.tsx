@@ -6,18 +6,18 @@ import { LeagueTable } from "@/components/LeagueTable";
 import { FixtureList } from "@/components/FixtureList";
 import { WeekPrediction } from "@/components/WeekPrediction";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Season } from "@/types/league";
+import { SeasonLeaderboard } from "@/types/league";
 import { FixtureResponse } from "@/types/fixture";
 import { TeamPrediction } from "@/types/prediction";
 import { Progress } from "@/components/ui/progress";
 import { Home } from "lucide-react";
+import ApiService from "@/services/apiService";
 
 export default function Leaderboard() {
     const params = useParams();
-    const { seasonId } = params;
-    const [seasonData, setSeasonData] = useState<Season>();
+    const seasonId: number = parseInt(params.seasonId as string);
+    const [seasonData, setSeasonData] = useState<SeasonLeaderboard>();
     const [fixturesData, setFixturesData] = useState<FixtureResponse>();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [predictionsData, setPredictionsData] = useState<TeamPrediction[]>(
@@ -38,15 +38,9 @@ export default function Leaderboard() {
         try {
             const [leagueTableResponse, fixturesResponse, predictionsResponse] =
                 await Promise.all([
-                    axios.get<Season>(
-                        `http://localhost:8000/api/league-table/${seasonId}`
-                    ),
-                    axios.get<FixtureResponse>(
-                        `http://localhost:8000/api/fixtures/${seasonId}/${weekNumber}`
-                    ),
-                    axios.get<TeamPrediction[]>(
-                        `http://localhost:8000/api/week/predict/${seasonId}/${weekNumber}`
-                    ),
+                    ApiService.leagueTable(seasonId),
+                    ApiService.fixtures(seasonId, weekNumber),
+                    ApiService.predict(seasonId, weekNumber),
                 ]);
             setSeasonData(leagueTableResponse.data);
             setFixturesData(fixturesResponse.data);
@@ -76,9 +70,7 @@ export default function Leaderboard() {
 
     const handlePlayWeek = async (weekNo: number) => {
         try {
-            await axios.get<Season>(
-                `http://localhost:8000/api/week/simulate/${seasonId}/${weekNo}`
-            );
+            await ApiService.simulate(seasonId, weekNo);
             setNextOrPlay(false);
             setProgress((weekNo / totalWeeks) * 100);
             fetchData();
