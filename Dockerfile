@@ -23,7 +23,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory contents
 COPY . /var/www
 
 # Install dependencies
@@ -31,14 +30,3 @@ RUN composer install --optimize-autoloader --no-dev
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www
-
-# Copy entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# Expose port 9000 and start php-fpm server
-EXPOSE 9000
-
-# Run the entrypoint script that handles migration and seeding
-ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["php-fpm"]

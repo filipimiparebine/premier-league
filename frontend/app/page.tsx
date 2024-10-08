@@ -70,6 +70,13 @@ export default function SelectTeams() {
         }
     };
 
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) =>
+            e.key === "Enter" && handleSubmit();
+        document.addEventListener("keydown", onKeyDown);
+        return () => document.removeEventListener("keydown", onKeyDown);
+    }, [handleSubmit]);
+
     return (
         <div className="p-4">
             <h1 className="m-auto max-w-[300px] text-2xl font-bold mb-3 text-center">

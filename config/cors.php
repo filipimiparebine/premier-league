@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost', 'https://premier-league.filipblajiu.com'],
+    'allowed_origins' => ['http://localhost:3000', 'https://premier-league.filipblajiu.com:3000'],
 
     'allowed_origins_patterns' => [],
 
